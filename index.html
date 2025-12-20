@@ -3,80 +3,26 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Smart Garden Dashboard</title>
+    <title>Smart Garden Secure Login</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
     <style>
-        /* إعدادات الخلفية العامة */
-        body { 
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
-            background-color: #f8f9fa; 
-            margin: 0; 
-            display: flex; 
-            justify-content: center; 
-            align-items: center; 
-            height: 100vh; 
-        }
-
-        /* الحاوية البيضاء الرئيسية كما في الصورة */
-        .container { 
-            width: 100%;
-            max-width: 400px; 
-            background: white; 
-            padding: 40px; 
-            border-radius: 25px; 
-            box-shadow: 0 15px 35px rgba(0,0,0,0.05); 
-            text-align: center;
-        }
-
-        h1 { color: #2d6a4f; margin-bottom: 30px; font-weight: 600; }
-
-        /* تنسيق حقول الإدخال */
-        input { 
-            width: 100%; 
-            padding: 15px; 
-            margin: 10px 0; 
-            border-radius: 12px; 
-            border: 1px solid #e0e0e0; 
-            box-sizing: border-box; 
-            font-size: 16px;
-            color: #333;
-            outline: none;
-            transition: border-color 0.3s;
-        }
-
+        body { font-family: 'Segoe UI', sans-serif; background-color: #f8f9fa; margin: 0; display: flex; justify-content: center; align-items: center; height: 100vh; }
+        .container { width: 100%; max-width: 400px; background: white; padding: 40px; border-radius: 25px; box-shadow: 0 15px 35px rgba(0,0,0,0.05); text-align: center; }
+        h1 { color: #2d6a4f; margin-bottom: 30px; }
+        input { width: 100%; padding: 15px; margin: 10px 0; border-radius: 12px; border: 1px solid #e0e0e0; box-sizing: border-box; font-size: 16px; outline: none; transition: 0.3s; }
         input:focus { border-color: #2196F3; }
-
-        input::placeholder { color: #999; }
-
-        /* الزر الأزرق كما في الصورة المطلوبة */
-        .login-btn { 
-            width: 100%; 
-            padding: 15px; 
-            margin-top: 20px; 
-            border: none; 
-            border-radius: 12px; 
-            font-size: 18px; 
-            cursor: pointer; 
-            font-weight: 600; 
-            background-color: #2196F3; /* اللون الأزرق المطلب */
-            color: white;
-            transition: background 0.3s;
-        }
-
+        .login-btn { width: 100%; padding: 15px; margin-top: 20px; border: none; border-radius: 12px; font-size: 18px; cursor: pointer; font-weight: 600; background-color: #2196F3; color: white; transition: 0.3s; }
         .login-btn:hover { background-color: #1976D2; }
-
-        /* تنسيق لوحة التحكم بعد الدخول */
+        .login-btn:disabled { background-color: #ccc; cursor: not-allowed; }
+        
+        /* Dashboard Layout */
         .sensor-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 25px; }
         .card { background: #f1f8e9; padding: 15px; border-radius: 12px; border: 1px solid #dcedc8; }
-        .card h3 { font-size: 11px; margin: 0; color: #555; text-transform: uppercase; }
+        .card h3 { font-size: 11px; margin: 0; color: #555; }
         .card p { font-size: 18px; font-weight: bold; margin: 5px 0; color: #2e7d32; }
-
-        .control-btn { 
-            width: 100%; padding: 14px; margin: 5px 0; border: none; border-radius: 10px; 
-            font-size: 16px; font-weight: 600; cursor: pointer; transition: 0.3s; 
-        }
+        .control-btn { width: 100%; padding: 14px; margin: 5px 0; border: none; border-radius: 10px; font-size: 16px; font-weight: 600; cursor: pointer; transition: 0.3s; }
         .on { background: #4caf50; color: white; }
         .off { background: #f44336; color: white; }
     </style>
@@ -88,7 +34,7 @@
             <h1>Login</h1>
             <input type="email" id="email" placeholder="Enter Email" autocomplete="off">
             <input type="password" id="pass" placeholder="Enter Password" autocomplete="off">
-            <button class="login-btn" onclick="login()">Login</button>
+            <button class="login-btn" id="loginBtn" onclick="login()">Login</button>
         </div>
 
         <div id="dashPage" style="display:none;">
@@ -121,17 +67,35 @@
         const db = firebase.database();
 
         function login() {
-            const e = document.getElementById('email'), p = document.getElementById('pass');
-            auth.signInWithEmailAndPassword(e.value, p.value).then(() => {
-                // مسح البيانات لتبقى الخانات فارغة في المرة القادمة
-                e.value = ""; p.value = ""; 
-                document.getElementById('loginPage').style.display='none';
-                document.getElementById('dashPage').style.display='block';
-                listen();
-            }).catch(err => alert("Error: " + err.message));
+            const email = document.getElementById('email').value;
+            const pass = document.getElementById('pass').value;
+            const btn = document.getElementById('loginBtn');
+
+            if(!email || !pass) {
+                alert("Please enter both email and password.");
+                return;
+            }
+
+            btn.innerText = "Authenticating...";
+            btn.disabled = true;
+
+            // التحقق من البيانات عبر Firebase Auth
+            auth.signInWithEmailAndPassword(email, pass)
+                .then(() => {
+                    // في حال النجاح
+                    document.getElementById('loginPage').style.display = 'none';
+                    document.getElementById('dashPage').style.display = 'block';
+                    startDashboard();
+                })
+                .catch((error) => {
+                    // في حال الفشل (بيانات خاطئة)
+                    btn.innerText = "Login";
+                    btn.disabled = false;
+                    alert("Access Denied: " + error.message);
+                });
         }
 
-        function listen() {
+        function startDashboard() {
             db.ref("Status").on("value", s => {
                 const d = s.val();
                 if(d) {
