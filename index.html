@@ -3,30 +3,92 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Smart Garden</title>
+    <title>Smart Garden Dashboard</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
     <style>
-        body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; text-align: center; padding: 20px; }
-        .container { max-width: 450px; margin: auto; background: white; padding: 30px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
-        .sensor-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 20px 0; }
-        .card { background: #e8f5e9; padding: 15px; border-radius: 12px; }
-        .card h3 { font-size: 12px; margin: 0; color: #2e7d32; }
-        .card p { font-size: 18px; font-weight: bold; margin: 5px 0; }
-        .btn { width: 100%; padding: 15px; margin: 8px 0; border: none; border-radius: 12px; font-size: 16px; cursor: pointer; font-weight: bold; transition: 0.3s; }
+        /* إعدادات الخلفية العامة */
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            background-color: #f8f9fa; 
+            margin: 0; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            height: 100vh; 
+        }
+
+        /* الحاوية البيضاء الرئيسية كما في الصورة */
+        .container { 
+            width: 100%;
+            max-width: 400px; 
+            background: white; 
+            padding: 40px; 
+            border-radius: 25px; 
+            box-shadow: 0 15px 35px rgba(0,0,0,0.05); 
+            text-align: center;
+        }
+
+        h1 { color: #2d6a4f; margin-bottom: 30px; font-weight: 600; }
+
+        /* تنسيق حقول الإدخال */
+        input { 
+            width: 100%; 
+            padding: 15px; 
+            margin: 10px 0; 
+            border-radius: 12px; 
+            border: 1px solid #e0e0e0; 
+            box-sizing: border-box; 
+            font-size: 16px;
+            color: #333;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+
+        input:focus { border-color: #2196F3; }
+
+        input::placeholder { color: #999; }
+
+        /* الزر الأزرق كما في الصورة المطلوبة */
+        .login-btn { 
+            width: 100%; 
+            padding: 15px; 
+            margin-top: 20px; 
+            border: none; 
+            border-radius: 12px; 
+            font-size: 18px; 
+            cursor: pointer; 
+            font-weight: 600; 
+            background-color: #2196F3; /* اللون الأزرق المطلب */
+            color: white;
+            transition: background 0.3s;
+        }
+
+        .login-btn:hover { background-color: #1976D2; }
+
+        /* تنسيق لوحة التحكم بعد الدخول */
+        .sensor-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 25px; }
+        .card { background: #f1f8e9; padding: 15px; border-radius: 12px; border: 1px solid #dcedc8; }
+        .card h3 { font-size: 11px; margin: 0; color: #555; text-transform: uppercase; }
+        .card p { font-size: 18px; font-weight: bold; margin: 5px 0; color: #2e7d32; }
+
+        .control-btn { 
+            width: 100%; padding: 14px; margin: 5px 0; border: none; border-radius: 10px; 
+            font-size: 16px; font-weight: 600; cursor: pointer; transition: 0.3s; 
+        }
         .on { background: #4caf50; color: white; }
         .off { background: #f44336; color: white; }
-        input { width: 100%; padding: 12px; margin: 10px 0; border-radius: 8px; border: 1px solid #ddd; box-sizing: border-box; }
     </style>
 </head>
 <body>
+
     <div class="container">
         <div id="loginPage">
             <h1>Login</h1>
-            <input type="email" id="email" placeholder="walidelkiouas052011@gmail.com" autocomplete="off">
-            <input type="password" id="pass" placeholder="walid  elkiouas..052011" autocomplete="off">
-            <button class="btn on" onclick="login()">Login</button>
+            <input type="email" id="email" placeholder="Enter Email" autocomplete="off">
+            <input type="password" id="pass" placeholder="Enter Password" autocomplete="off">
+            <button class="login-btn" onclick="login()">Login</button>
         </div>
 
         <div id="dashPage" style="display:none;">
@@ -36,13 +98,15 @@
                 <div class="card"><h3>Hum</h3><p id="h">--</p></div>
                 <div class="card"><h3>Soil</h3><p id="s">--</p></div>
             </div>
-            <button id="btnAuto" class="btn" onclick="toggle('autoMode')">Mode</button>
-            <button id="btnPump" class="btn" onclick="toggle('pump')">Pump</button>
-            <button id="btnFan" class="btn" onclick="toggle('fan')">Fan</button>
-            <button id="btnLight" class="btn" onclick="toggle('light')">Light</button>
-            <button id="btnHeater" class="btn" onclick="toggle('heater')">Heater</button>
-            <button id="btnExhaust" class="btn" onclick="toggle('exhaust')">Exhaust</button>
-            <button class="btn" style="background:#607d8b; color:white;" onclick="logout()">Logout</button>
+            <div id="controls">
+                <button id="btnAuto" class="control-btn" onclick="toggle('autoMode')">Mode</button>
+                <button id="btnPump" class="control-btn" onclick="toggle('pump')">Pump</button>
+                <button id="btnFan" class="control-btn" onclick="toggle('fan')">Fan</button>
+                <button id="btnLight" class="control-btn" onclick="toggle('light')">Light</button>
+                <button id="btnHeater" class="control-btn" onclick="toggle('heater')">Heater</button>
+                <button id="btnExhaust" class="control-btn" onclick="toggle('exhaust')">Exhaust</button>
+            </div>
+            <button class="control-btn" style="background:#9e9e9e; color:white; margin-top:20px;" onclick="logout()">Logout</button>
         </div>
     </div>
 
@@ -59,39 +123,42 @@
         function login() {
             const e = document.getElementById('email'), p = document.getElementById('pass');
             auth.signInWithEmailAndPassword(e.value, p.value).then(() => {
-                e.value = ""; p.value = ""; // مسح البيانات فوراً
+                // مسح البيانات لتبقى الخانات فارغة في المرة القادمة
+                e.value = ""; p.value = ""; 
                 document.getElementById('loginPage').style.display='none';
                 document.getElementById('dashPage').style.display='block';
                 listen();
-            }).catch(err => alert(err.message));
+            }).catch(err => alert("Error: " + err.message));
         }
 
         function listen() {
             db.ref("Status").on("value", s => {
                 const d = s.val();
                 if(d) {
-                    document.getElementById('t').innerText = d.temperature + "°C";
-                    document.getElementById('h').innerText = d.humidity + "%";
-                    document.getElementById('s').innerText = d.soilMoisture + "%";
+                    document.getElementById('t').innerText = (d.temperature || 0) + "°C";
+                    document.getElementById('h').innerText = (d.humidity || 0) + "%";
+                    document.getElementById('s').innerText = (d.soilMoisture || 0) + "%";
                 }
             });
             db.ref("Control").on("value", s => {
                 const d = s.val();
                 if(d) {
-                    // تحديث الأزرار لتظهر الحالة الفعلية حتى في وضع Auto
-                    ui("btnAuto", d.autoMode, "MODE: AUTO", "MODE: MANUAL");
-                    ui("btnPump", d.pump, "PUMP: ON", "PUMP: OFF");
-                    ui("btnFan", d.fan, "FAN: ON", "FAN: OFF");
-                    ui("btnLight", d.light, "LIGHT: ON", "LIGHT: OFF");
-                    ui("btnHeater", d.heater, "HEATER: ON", "HEATER: OFF");
-                    ui("btnExhaust", d.exhaust, "EXHAUST: ON", "EXHAUST: OFF");
+                    updateUI("btnAuto", d.autoMode, "MODE: AUTO", "MODE: MANUAL");
+                    updateUI("btnPump", d.pump, "PUMP: ON", "PUMP: OFF");
+                    updateUI("btnFan", d.fan, "FAN: ON", "FAN: OFF");
+                    updateUI("btnLight", d.light, "LIGHT: ON", "LIGHT: OFF");
+                    updateUI("btnHeater", d.heater, "HEATER: ON", "HEATER: OFF");
+                    updateUI("btnExhaust", d.exhaust, "EXHAUST: ON", "EXHAUST: OFF");
                 }
             });
         }
 
-        function ui(id, st, on, off) {
+        function updateUI(id, state, onTxt, offTxt) {
             const b = document.getElementById(id);
-            if(b) { b.innerText = st ? on : off; b.className = st ? "btn on" : "btn off"; }
+            if(b) {
+                b.innerText = state ? onTxt : offTxt;
+                b.className = state ? "control-btn on" : "control-btn off";
+            }
         }
 
         function toggle(k) {
