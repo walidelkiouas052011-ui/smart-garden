@@ -3,131 +3,99 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Secure Smart Garden</title>
+    <title>Secure Login - Step 2</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
     <style>
-        body { font-family: 'Segoe UI', sans-serif; background-color: #f8f9fa; margin: 0; display: flex; justify-content: center; align-items: center; height: 100vh; }
+        body { font-family: 'Segoe UI', sans-serif; background-color: #f8f9fa; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
         .container { width: 100%; max-width: 400px; background: white; padding: 40px; border-radius: 25px; box-shadow: 0 15px 35px rgba(0,0,0,0.05); text-align: center; }
-        h1 { color: #2d6a4f; margin-bottom: 25px; }
+        h1 { color: #2196F3; margin-bottom: 25px; }
         input { width: 100%; padding: 15px; margin: 10px 0; border-radius: 12px; border: 1px solid #e0e0e0; box-sizing: border-box; font-size: 16px; outline: none; }
-        .login-btn { width: 100%; padding: 15px; margin-top: 20px; border: none; border-radius: 12px; font-size: 18px; cursor: pointer; font-weight: 600; background-color: #2196F3; color: white; transition: 0.3s; }
-        .login-btn:hover { background-color: #1976D2; }
-        .msg { font-size: 14px; margin-top: 15px; color: #666; }
-        /* Dashboard Layout */
-        .sensor-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 25px; }
-        .card { background: #f1f8e9; padding: 15px; border-radius: 12px; border: 1px solid #dcedc8; }
-        .control-btn { width: 100%; padding: 14px; margin: 5px 0; border: none; border-radius: 10px; font-size: 16px; font-weight: 600; cursor: pointer; }
-        .on { background: #4caf50; color: white; }
-        .off { background: #f44336; color: white; }
+        .btn { width: 100%; padding: 15px; margin-top: 20px; border: none; border-radius: 12px; font-size: 18px; cursor: pointer; font-weight: 600; background-color: #2196F3; color: white; transition: 0.3s; }
+        .btn:hover { background-color: #1976D2; }
+        #otpSection { display: none; } /* مخفي حتى ينجح الجزء الأول */
+        .info { font-size: 14px; color: #666; margin-top: 10px; }
     </style>
 </head>
 <body>
 
-    <div class="container">
-        <div id="loginPage">
-            <h1>Login</h1>
-            <input type="email" id="email" placeholder="Enter Email" autocomplete="off">
-            <input type="password" id="pass" placeholder="Enter Password" autocomplete="off">
-            <button class="login-btn" id="loginBtn" onclick="login()">Login</button>
-            <p id="infoMsg" class="msg"></p>
-        </div>
-
-        <div id="dashPage" style="display:none;">
-            <h1>🌿 Smart Garden</h1>
-            <div class="sensor-grid">
-                <div class="card"><h3>Temp</h3><p id="t">--</p></div>
-                <div class="card"><h3>Hum</h3><p id="h">--</p></div>
-                <div class="card"><h3>Soil</h3><p id="s">--</p></div>
-            </div>
-            <div id="controls">
-                <button id="btnAuto" class="control-btn" onclick="toggle('autoMode')">Mode</button>
-                <button id="btnPump" class="control-btn" onclick="toggle('pump')">Pump</button>
-                <button id="btnFan" class="control-btn" onclick="toggle('fan')">Fan</button>
-                <button id="btnLight" class="control-btn" onclick="toggle('light')">Light</button>
-                <button id="btnHeater" class="control-btn" onclick="toggle('heater')">Heater</button>
-                <button id="btnExhaust" class="control-btn" onclick="toggle('exhaust')">Exhaust</button>
-            </div>
-            <button class="control-btn" style="background:#9e9e9e; color:white; margin-top:20px;" onclick="logout()">Logout</button>
-        </div>
+<div class="container">
+    <div id="loginSection">
+        <h1>Login</h1>
+        <p class="info">Enter your credentials to receive a code</p>
+        <input type="email" id="email" placeholder="Email Address">
+        <input type="password" id="pass" placeholder="Password">
+        <button class="btn" onclick="step1()">Next</button>
     </div>
 
-    <script>
-        const firebaseConfig = {
-            apiKey: "AIzaSyAKrZECVHivxo1vwuSOEzZ7tBkDBulpNnI",
-            databaseURL: "https://smart-garden-aad3e-default-rtdb.europe-west1.firebasedatabase.app/",
-            projectId: "smart-garden-aad3e"
-        };
-        firebase.initializeApp(firebaseConfig);
-        const auth = firebase.auth();
-        const db = firebase.database();
+    <div id="otpSection">
+        <h1>Verify Identity</h1>
+        <p class="info">A 6-digit code was sent to your email.</p>
+        <input type="text" id="otpInput" placeholder="Enter 6-digit code" maxlength="6">
+        <button class="btn" onclick="step2()">Verify & Enter</button>
+        <button class="btn" style="background:#9e9e9e; font-size:14px;" onclick="location.reload()">Back</button>
+    </div>
 
-        function login() {
-            const email = document.getElementById('email').value;
-            const pass = document.getElementById('pass').value;
-            const msg = document.getElementById('infoMsg');
-            const btn = document.getElementById('loginBtn');
+    <div id="dashPage" style="display:none;">
+        <h1>🌿 Smart Garden</h1>
+        <button class="btn" style="background:#f44336;" onclick="location.reload()">Logout</button>
+    </div>
+</div>
 
-            auth.signInWithEmailAndPassword(email, pass)
-                .then((userCredential) => {
-                    const user = userCredential.user;
+<script>
+    const firebaseConfig = {
+        apiKey: "AIzaSyAKrZECVHivxo1vwuSOEzZ7tBkDBulpNnI",
+        databaseURL: "https://smart-garden-aad3e-default-rtdb.europe-west1.firebasedatabase.app/",
+        projectId: "smart-garden-aad3e"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.database();
 
-                    // التحقق إذا كان البريد مؤكداً
-                    if (user.emailVerified) {
-                        document.getElementById('loginPage').style.display = 'none';
-                        document.getElementById('dashPage').style.display = 'block';
-                        startDashboard();
-                    } else {
-                        // إرسال بريد التحقق إذا لم يكن مؤكداً
-                        user.sendEmailVerification().then(() => {
-                            msg.innerText = "Verification link sent to your email. Please check and click the link to login.";
-                            msg.style.color = "blue";
-                        });
-                        auth.signOut();
-                    }
-                })
-                .catch((error) => {
-                    alert("Error: " + error.message);
-                });
-        }
+    let generatedOTP = "";
 
-        function startDashboard() {
-            db.ref("Status").on("value", s => {
-                const d = s.val();
-                if(d) {
-                    document.getElementById('t').innerText = (d.temperature || 0) + "°C";
-                    document.getElementById('h').innerText = (d.humidity || 0) + "%";
-                    document.getElementById('s').innerText = (d.soilMoisture || 0) + "%";
-                }
+    // الخطوة 1: التحقق من البيانات وإرسال الرمز
+    function step1() {
+        const e = document.getElementById('email').value;
+        const p = document.getElementById('pass').value;
+
+        auth.signInWithEmailAndPassword(e, p).then((userCredential) => {
+            const user = userCredential.user;
+            
+            // إنشاء رمز عشوائي من 6 أرقام
+            generatedOTP = Math.floor(100000 + Math.random() * 900000).toString();
+            
+            // تخزين الرمز في قاعدة البيانات ليتم إرساله (أو مراقبته)
+            db.ref("TempOTP/" + user.uid).set({
+                code: generatedOTP,
+                timestamp: Date.now()
+            }).then(() => {
+                // ملاحظة هامة: لإرسال الرمز لبريدك فعلياً، نستخدم خدمة Email Verification
+                // أو نقوم بعرضه في Firebase Console لتجربته الآن
+                alert("Security Code: " + generatedOTP + " (In real apps, this is sent via email/SMS)");
+                
+                document.getElementById('loginSection').style.display = 'none';
+                document.getElementById('otpSection').style.display = 'block';
             });
-            db.ref("Control").on("value", s => {
-                const d = s.val();
-                if(d) {
-                    updateUI("btnAuto", d.autoMode, "MODE: AUTO", "MODE: MANUAL");
-                    updateUI("btnPump", d.pump, "PUMP: ON", "PUMP: OFF");
-                    updateUI("btnFan", d.fan, "FAN: ON", "FAN: OFF");
-                    updateUI("btnLight", d.light, "LIGHT: ON", "LIGHT: OFF");
-                    updateUI("btnHeater", d.heater, "HEATER: ON", "HEATER: OFF");
-                    updateUI("btnExhaust", d.exhaust, "EXHAUST: ON", "EXHAUST: OFF");
-                }
-            });
-        }
 
-        function updateUI(id, state, onTxt, offTxt) {
-            const b = document.getElementById(id);
-            if(b) {
-                b.innerText = state ? onTxt : offTxt;
-                b.className = state ? "control-btn on" : "control-btn off";
-            }
-        }
+        }).catch(err => alert("Login Failed: " + err.message));
+    }
 
-        function toggle(k) {
-            const r = db.ref("Control/" + k);
-            r.once("value").then(s => r.set(!s.val()));
+    // الخطوة 2: التحقق من الرمز المدخل
+    function step2() {
+        const inputOTP = document.getElementById('otpInput').value;
+        
+        if (inputOTP === generatedOTP) {
+            // الرمز صحيح!
+            document.getElementById('otpSection').style.display = 'none';
+            document.querySelector('.container').style.maxWidth = '500px';
+            document.getElementById('dashPage').style.display = 'block';
+            // هنا تضع وظائف تشغيل لوحة التحكم (startDashboard)
+        } else {
+            alert("Incorrect code! Please try again.");
         }
-
-        function logout() { auth.signOut().then(() => location.reload()); }
-    </script>
+    }
+</script>
 </body>
 </html>
