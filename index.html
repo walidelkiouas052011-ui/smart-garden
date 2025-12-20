@@ -3,25 +3,29 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Smart Garden Dashboard</title>
+    <title>Smart Garden Pro Dashboard</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
     <style>
         body { font-family: 'Segoe UI', sans-serif; background-color: #f0f2f5; margin: 0; padding: 20px; text-align: center; }
         .container { max-width: 500px; margin: auto; background: white; padding: 25px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
-        h1 { color: #2d6a4f; }
+        h1 { color: #2d6a4f; margin-bottom: 20px; }
         .sensor-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 20px; }
-        .sensor-card { background: #d8f3dc; padding: 10px; border-radius: 12px; }
-        .sensor-card h3 { font-size: 12px; margin: 0; color: #1b4332; }
-        .sensor-card p { font-size: 20px; font-weight: bold; margin: 5px 0; }
-        .btn { width: 100%; padding: 12px; margin: 5px 0; border: none; border-radius: 10px; font-size: 16px; cursor: pointer; font-weight: 600; transition: 0.3s; }
-        .on { background: #40916c; color: white; }
-        .off { background: #ff4d4d; color: white; }
-        input { width: 100%; padding: 12px; margin: 10px 0; border-radius: 8px; border: 1px solid #ddd; box-sizing: border-box; }
+        .sensor-card { background: #e8f5e9; padding: 12px; border-radius: 12px; border: 1px solid #c8e6c9; }
+        .sensor-card h3 { font-size: 12px; margin: 0; color: #2e7d32; text-transform: uppercase; }
+        .sensor-card p { font-size: 20px; font-weight: bold; margin: 5px 0; color: #1b5e20; }
+        .btn { width: 100%; padding: 14px; margin: 6px 0; border: none; border-radius: 10px; font-size: 16px; cursor: pointer; font-weight: 600; transition: 0.3s; text-transform: uppercase; }
+        .on { background: #43a047; color: white; box-shadow: 0 4px #2e7d32; }
+        .on:active { box-shadow: 0 2px #2e7d32; transform: translateY(2px); }
+        .off { background: #e53935; color: white; box-shadow: 0 4px #c62828; }
+        .off:active { box-shadow: 0 2px #c62828; transform: translateY(2px); }
+        .logout-btn { background: #607d8b; color: white; margin-top: 15px; font-size: 14px; }
+        input { width: 100%; padding: 14px; margin: 10px 0; border-radius: 8px; border: 1px solid #ddd; box-sizing: border-box; font-size: 16px; }
     </style>
 </head>
 <body>
+
     <div class="container">
         <div id="loginPage">
             <h1>Login</h1>
@@ -32,24 +36,28 @@
 
         <div id="dashPage" style="display:none;">
             <h1>🌿 Smart Garden</h1>
+            
             <div class="sensor-grid">
-                <div class="sensor-card"><h3>Temperature</h3><p id="t">--</p></div>
+                <div class="sensor-card"><h3>Temp</h3><p id="t">--</p></div>
                 <div class="sensor-card"><h3>Humidity</h3><p id="h">--</p></div>
-                <div class="sensor-card"><h3>Soil Moisture</h3><p id="s">--</p></div>
+                <div class="sensor-card"><h3>Soil</h3><p id="s">--</p></div>
             </div>
             
-            <button id="btnAuto" class="btn" onclick="toggle('autoMode')">Mode</button>
-            <button id="btnPump" class="btn" onclick="toggle('pump')">Water Pump</button>
-            <button id="btnFan" class="btn" onclick="toggle('fan')">Main Fan</button>
-            <button id="btnLight" class="btn" onclick="toggle('light')">Plant Light</button>
-            <button id="btnHeater" class="btn" onclick="toggle('heater')">Heater</button>
-            <button id="btnExhaust" class="btn" onclick="toggle('exhaust')">Exhaust Fan</button>
+            <div id="controls">
+                <button id="btnAuto" class="btn" onclick="toggle('autoMode')">Mode: --</button>
+                <button id="btnPump" class="btn" onclick="toggle('pump')">Pump: --</button>
+                <button id="btnFan" class="btn" onclick="toggle('fan')">Fan: --</button>
+                <button id="btnLight" class="btn" onclick="toggle('light')">Light: --</button>
+                <button id="btnHeater" class="btn" onclick="toggle('heater')">Heater: --</button>
+                <button id="btnExhaust" class="btn" onclick="toggle('exhaust')">Exhaust: --</button>
+            </div>
             
-            <button class="btn" style="background:#6c757d; color:white;" onclick="location.reload()">Logout</button>
+            <button class="btn logout-btn" onclick="logout()">Logout</button>
         </div>
     </div>
 
     <script>
+        // Firebase Configuration
         const firebaseConfig = {
             apiKey: "AIzaSyAKrZECVHivxo1vwuSOEzZ7tBkDBulpNnI",
             databaseURL: "https://smart-garden-aad3e-default-rtdb.europe-west1.firebasedatabase.app/",
@@ -60,50 +68,73 @@
         const auth = firebase.auth();
         const db = firebase.database();
 
+        // Login Function with Auto-Clear
         function login() {
-            auth.signInWithEmailAndPassword(document.getElementById('email').value, document.getElementById('pass').value)
+            const email = document.getElementById('email').value;
+            const pass = document.getElementById('pass').value;
+
+            auth.signInWithEmailAndPassword(email, pass)
                 .then(() => {
-                    document.getElementById('loginPage').style.display='none';
-                    document.getElementById('dashPage').style.display='block';
-                    listen();
-                }).catch(e => alert("Error: " + e.message));
+                    // Clear inputs immediately
+                    document.getElementById('email').value = "";
+                    document.getElementById('pass').value = "";
+                    
+                    document.getElementById('loginPage').style.display = 'none';
+                    document.getElementById('dashPage').style.display = 'block';
+                    startListening();
+                })
+                .catch(e => alert("Login Failed: " + e.message));
         }
 
-        function listen() {
-            db.ref("Status").on("value", s => {
-                const d = s.val();
-                if(d) {
-                    document.getElementById('t').innerText = d.temperature + "°C";
-                    document.getElementById('h').innerText = d.humidity + "%";
-                    document.getElementById('s').innerText = d.soilMoisture + "%";
+        // Real-time Listeners
+        function startListening() {
+            // Sensors Data
+            db.ref("Status").on("value", snapshot => {
+                const data = snapshot.val();
+                if(data) {
+                    document.getElementById('t').innerText = (data.temperature || 0) + "°C";
+                    document.getElementById('h').innerText = (data.humidity || 0) + "%";
+                    document.getElementById('s').innerText = (data.soilMoisture || 0) + "%";
                 }
             });
-            db.ref("Control").on("value", s => {
-                const d = s.val();
-                if(d) {
-                    ui("btnAuto", d.autoMode, "MODE: AUTO", "MODE: MANUAL");
-                    ui("btnPump", d.pump, "PUMP: ON", "PUMP: OFF");
-                    ui("btnFan", d.fan, "FAN: ON", "FAN: OFF");
-                    ui("btnLight", d.light, "LIGHT: ON", "LIGHT: OFF");
-                    ui("btnHeater", d.heater, "HEATER: ON", "HEATER: OFF");
-                    ui("btnExhaust", d.exhaust, "EXHAUST: ON", "EXHAUST: OFF");
+
+            // Control Buttons State
+            db.ref("Control").on("value", snapshot => {
+                const data = snapshot.val();
+                if(data) {
+                    updateUI("btnAuto", data.autoMode, "Mode: Auto", "Mode: Manual");
+                    updateUI("btnPump", data.pump, "Pump: ON", "Pump: OFF");
+                    updateUI("btnFan", data.fan, "Fan: ON", "Fan: OFF");
+                    updateUI("btnLight", data.light, "Light: ON", "Light: OFF");
+                    updateUI("btnHeater", data.heater, "Heater: ON", "Heater: OFF");
+                    updateUI("btnExhaust", data.exhaust, "Exhaust: ON", "Exhaust: OFF");
                 }
             });
         }
 
-        function ui(id, st, on, off) {
-            const b = document.getElementById(id);
-            if(b) {
-                b.innerText = st ? on : off;
-                b.className = st ? "btn on" : "btn off";
+        // UI Update Helper
+        function updateUI(id, state, onText, offText) {
+            const btn = document.getElementById(id);
+            if(btn) {
+                btn.innerText = state ? onText : offText;
+                btn.className = state ? "btn on" : "btn off";
             }
         }
 
-        function toggle(k) {
-            const r = db.ref("Control/" + k);
-            r.once("value").then(s => r.set(!s.val()));
+        // Instant Toggle Function
+        function toggle(key) {
+            const ref = db.ref("Control/" + key);
+            ref.once("value").then(snap => {
+                ref.set(!snap.val());
+            });
+        }
+
+        // Logout Function
+        function logout() {
+            auth.signOut().then(() => {
+                location.reload();
+            });
         }
     </script>
 </body>
 </html>
-
