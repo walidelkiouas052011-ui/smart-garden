@@ -12,11 +12,14 @@
             --primary: #2196F3; --success: #4caf50; --danger: #f44336;
             --warning: #ff9800; --dark: #2c3e50; --light: #f8f9fa;
         }
-        body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; margin: 0; padding: 20px; display: flex; justify-content: center; }
-        .container { width: 100%; max-width: 480px; background: white; border-radius: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); overflow: hidden; }
+        body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; margin: 0; padding: 20px; display: flex; justify-content: center; direction: ltr; }
+        .container { width: 100%; max-width: 480px; background: white; border-radius: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); overflow: hidden; position: relative; }
         
-        .header { background: var(--dark); color: white; padding: 20px; text-align: center; }
-        .header h1 { margin: 0; font-size: 22px; letter-spacing: 1px; }
+        /* زر تبديل اللغة */
+        .lang-switch { position: absolute; top: 15px; right: 15px; background: rgba(255,255,255,0.2); color: white; border: 1px solid white; padding: 5px 10px; border-radius: 8px; cursor: pointer; font-size: 12px; z-index: 10; }
+
+        .header { background: var(--dark); color: white; padding: 25px 20px; text-align: center; }
+        .header h1 { margin: 0; font-size: 20px; letter-spacing: 1px; }
 
         .sensor-container { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; padding: 20px; }
         .s-card { background: var(--light); padding: 15px 5px; border-radius: 15px; text-align: center; border: 1px solid #eee; }
@@ -40,42 +43,48 @@
         #loginPage { padding: 40px 20px; text-align: center; }
         input { width: 100%; padding: 14px; margin-bottom: 15px; border-radius: 10px; border: 1px solid #ddd; box-sizing: border-box; }
         .login-btn { background: var(--dark); color: white; width: 100%; padding: 15px; border: none; border-radius: 10px; font-size: 18px; cursor: pointer; }
+        
+        /* محاذاة النصوص عند تغيير اللغة للعربية */
+        .rtl { direction: rtl; }
+        .rtl .btn { flex-direction: row-reverse; }
     </style>
 </head>
 <body>
 
-<div class="container">
+<div class="container" id="mainContainer">
+    <button class="lang-switch" onclick="toggleLanguage()" id="langBtn">English</button>
+
     <div id="loginPage">
-        <h2>🌿 Smart Garden</h2>
+        <h2 id="loginTitle">🌿 حديقة ذكية</h2>
         <input type="email" id="email" placeholder="البريد الإلكتروني">
         <input type="password" id="pass" placeholder="كلمة المرور">
-        <button class="login-btn" onclick="login()">دخول</button>
+        <button class="login-btn" onclick="login()" id="loginBtnText">دخول</button>
     </div>
 
     <div id="dashPage" style="display:none;">
-        <div class="header"><h1>لوحة التحكم</h1></div>
+        <div class="header"><h1 id="dashTitle">لوحة التحكم</h1></div>
 
         <div class="sensor-container">
-            <div class="s-card"><span>الحرارة</span><p id="t">--</p></div>
-            <div class="s-card"><span>الرطوبة</span><p id="h">--</p></div>
-            <div class="s-card"><span>التربة</span><p id="s">--</p></div>
+            <div class="s-card"><span id="lblTemp">الحرارة</span><p id="t">--</p></div>
+            <div class="s-card"><span id="lblHum">الرطوبة</span><p id="h">--</p></div>
+            <div class="s-card"><span id="lblSoil">التربة</span><p id="s">--</p></div>
         </div>
 
         <div class="controls">
             <button id="btnAuto" class="btn mode-toggle" onclick="toggle('autoMode')">
-                <span>وضع التشغيل</span><b id="txtMode">تلقائي</b>
+                <span id="lblMode">وضع التشغيل</span><b id="txtMode">تلقائي</b>
             </button>
             
-            <button id="btnPump" class="btn" onclick="toggle('pump')"><span>المضخة</span><b id="stPump">--</b></button>
-            <button id="btnLight" class="btn" onclick="toggle('light')"><span>الإضاءة</span><b id="stLight">--</b></button>
-            <button id="btnHum" class="btn" onclick="toggle('humiditySaver')"><span>المرطب</span><b id="stHum">--</b></button>
-            <button id="btnFan" class="btn" onclick="toggle('fan')"><span>المروحة</span><b id="stFan">--</b></button>
-            <button id="btnHeat" class="btn" onclick="toggle('heater')"><span>السخان</span><b id="stHeat">--</b></button>
-            <button id="btnExh" class="btn" onclick="toggle('exhaust')"><span>الشفاط</span><b id="stExh">--</b></button>
+            <button id="btnPump" class="btn" onclick="toggle('pump')"><span id="lblPump">المضخة</span><b id="stPump">--</b></button>
+            <button id="btnLight" class="btn" onclick="toggle('light')"><span id="lblLight">الإضاءة</span><b id="stLight">--</b></button>
+            <button id="btnHumid" class="btn" onclick="toggle('humiditySaver')"><span id="lblHumidifier">المرطب</span><b id="stHum">--</b></button>
+            <button id="btnFan" class="btn" onclick="toggle('fan')"><span id="lblFan">المروحة</span><b id="stFan">--</b></button>
+            <button id="btnHeat" class="btn" onclick="toggle('heater')"><span id="lblHeater">السخان</span><b id="stHeat">--</b></button>
+            <button id="btnExh" class="btn" onclick="toggle('exhaust')"><span id="lblExhaust">الشفاط</span><b id="stExh">--</b></button>
         </div>
         
         <div style="text-align: center; padding-bottom: 20px;">
-            <button onclick="logout()" style="background:none; border:none; color:#999; font-size:11px; cursor:pointer;">تسجيل الخروج</button>
+            <button onclick="logout()" style="background:none; border:none; color:#999; font-size:11px; cursor:pointer;" id="logoutBtn">تسجيل الخروج</button>
         </div>
     </div>
 </div>
@@ -89,7 +98,68 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
     const auth = firebase.auth();
+
+    let currentLang = 'ar';
     let autoModeActive = true;
+    let lastStates = {};
+
+    const translations = {
+        ar: {
+            loginTitle: "🌿 حديقة ذكية", email: "البريد الإلكتروني", pass: "كلمة المرور", loginBtn: "دخول",
+            dashTitle: "لوحة التحكم", lblTemp: "الحرارة", lblHum: "الرطوبة", lblSoil: "التربة",
+            lblMode: "وضع التشغيل", auto: "تلقائي", manual: "يدوي",
+            lblPump: "المضخة", lblLight: "الإضاءة", lblHumidifier: "المرطب", lblFan: "المروحة", lblHeater: "السخان", lblExhaust: "الشفاط",
+            on: "تشغيل", off: "إيقاف", logout: "تسجيل الخروج", langBtn: "English"
+        },
+        en: {
+            loginTitle: "🌿 Smart Garden", email: "Email Address", pass: "Password", loginBtn: "Login",
+            dashTitle: "DASHBOARD", lblTemp: "TEMP", lblHum: "HUMIDITY", lblSoil: "SOIL",
+            lblMode: "SYSTEM MODE", auto: "AUTO", manual: "MANUAL",
+            lblPump: "PUMP", lblLight: "LIGHT", lblHumidifier: "HUMIDIFIER", lblFan: "FAN", lblHeater: "HEATER", lblExhaust: "EXHAUST",
+            on: "ON", off: "OFF", logout: "Logout", langBtn: "العربية"
+        }
+    };
+
+    function toggleLanguage() {
+        currentLang = currentLang === 'ar' ? 'en' : 'ar';
+        const root = document.getElementById('mainContainer');
+        if(currentLang === 'ar') root.classList.add('rtl'); else root.classList.remove('rtl');
+        
+        document.getElementById('langBtn').innerText = translations[currentLang].langBtn;
+        document.getElementById('loginTitle').innerText = translations[currentLang].loginTitle;
+        document.getElementById('email').placeholder = translations[currentLang].email;
+        document.getElementById('pass').placeholder = translations[currentLang].pass;
+        document.getElementById('loginBtnText').innerText = translations[currentLang].loginBtn;
+        document.getElementById('dashTitle').innerText = translations[currentLang].dashTitle;
+        document.getElementById('lblTemp').innerText = translations[currentLang].lblTemp;
+        document.getElementById('lblHum').innerText = translations[currentLang].lblHum;
+        document.getElementById('lblSoil').innerText = translations[currentLang].lblSoil;
+        document.getElementById('lblMode').innerText = translations[currentLang].lblMode;
+        document.getElementById('lblPump').innerText = translations[currentLang].lblPump;
+        document.getElementById('lblLight').innerText = translations[currentLang].lblLight;
+        document.getElementById('lblHumidifier').innerText = translations[currentLang].lblHumidifier;
+        document.getElementById('lblFan').innerText = translations[currentLang].lblFan;
+        document.getElementById('lblHeater').innerText = translations[currentLang].lblHeater;
+        document.getElementById('lblExhaust').innerText = translations[currentLang].lblExhaust;
+        document.getElementById('logoutBtn').innerText = translations[currentLang].logout;
+        
+        // تحديث النصوص الحالية (ON/OFF)
+        updateStatusTexts();
+    }
+
+    function updateStatusTexts() {
+        document.getElementById('txtMode').innerText = autoModeActive ? translations[currentLang].auto : translations[currentLang].manual;
+        const keys = ['Pump', 'Light', 'Hum', 'Fan', 'Heat', 'Exh'];
+        keys.forEach(key => {
+            const el = document.getElementById('st' + key);
+            if(el && el.innerText !== '--') {
+                el.innerText = el.getAttribute('data-state') === 'true' ? translations[currentLang].on : translations[currentLang].off;
+            }
+        });
+    }
+
+    // افتراضياً نبدأ بالعربي
+    document.getElementById('mainContainer').classList.add('rtl');
 
     function login() {
         const e = document.getElementById('email').value, p = document.getElementById('pass').value;
@@ -97,7 +167,7 @@
             document.getElementById('loginPage').style.display='none';
             document.getElementById('dashPage').style.display='block';
             startListening();
-        }).catch(err => alert("خطأ في الدخول"));
+        }).catch(err => alert("خطأ في الدخول / Login Error"));
     }
 
     function startListening() {
@@ -111,25 +181,22 @@
         db.ref("Control").on("value", s => {
             const d = s.val(); if(!d) return;
             autoModeActive = d.autoMode;
-            document.getElementById('txtMode').innerText = autoModeActive ? "تلقائي" : "يدوي";
-            document.getElementById('btnAuto').className = autoModeActive ? "btn mode-toggle" : "btn mode-toggle mode-manual";
-
             updateUI("btnPump", "stPump", d.pump);
             updateUI("btnLight", "stLight", d.light);
-            updateUI("btnHum", "stHum", d.humiditySaver);
+            updateUI("btnHumid", "stHum", d.humiditySaver);
             updateUI("btnFan", "stFan", d.fan);
             updateUI("btnHeat", "stHeat", d.heater);
             updateUI("btnExh", "stExh", d.exhaust);
+            updateStatusTexts();
         });
     }
 
     function updateUI(btnId, spanId, state) {
         const btn = document.getElementById(btnId);
         const span = document.getElementById(spanId);
-        span.innerText = state ? "تشغيل" : "إيقاف";
+        span.setAttribute('data-state', state);
         btn.className = state ? "btn on" : "btn off";
-        if(autoModeActive) btn.classList.add("locked");
-        else btn.classList.remove("locked");
+        if(autoModeActive) btn.classList.add("locked"); else btn.classList.remove("locked");
     }
 
     function toggle(key) {
