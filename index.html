@@ -22,15 +22,16 @@
         .sensor-container { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; padding: 20px; background: #fff; }
         .s-card { background: #fff; padding: 15px 5px; border-radius: 15px; text-align: center; border: 1px solid #eee; transition: 0.3s; }
         .s-card i { display: block; font-size: 24px; margin-bottom: 5px; }
-        .s-card span { font-size: 12px; color: #888; font-weight: bold; }
+        .s-card span { font-size: 11px; color: #888; font-weight: bold; }
         .s-card p { font-size: 18px; font-weight: bold; margin: 5px 0; color: var(--dark); }
 
         /* الأزرار */
         .controls { padding: 10px 20px 20px; }
         .btn { 
             width: 100%; padding: 16px; margin-bottom: 12px; border: none; border-radius: 12px; 
-            font-size: 16px; font-weight: 600; cursor: pointer; transition: 0.3s;
+            font-size: 15px; font-weight: 600; cursor: pointer; transition: 0.3s;
             display: flex; justify-content: space-between; align-items: center;
+            box-sizing: border-box;
         }
         
         .mode-toggle { background: var(--primary); color: white; margin-bottom: 20px; box-shadow: 0 4px 15px rgba(33, 150, 243, 0.3); }
@@ -41,14 +42,12 @@
 
         .locked { opacity: 0.6; filter: grayscale(0.5); pointer-events: none; }
         
-        /* شاشة الدخول */
         #loginPage { padding: 40px 20px; text-align: center; }
         input { width: 100%; padding: 14px; margin-bottom: 15px; border-radius: 10px; border: 1px solid #ddd; box-sizing: border-box; }
-        .login-btn { background: var(--dark); color: white; border: none; width: 100%; padding: 15px; border-radius: 10px; font-size: 18px; }
+        .login-btn { background: var(--dark); color: white; border: none; width: 100%; padding: 15px; border-radius: 10px; font-size: 18px; cursor: pointer; }
 
-        /* أنيميشن */
-        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.7; } 100% { opacity: 1; } }
-        .active-anim { animation: pulse 2s infinite; }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.8; } 100% { opacity: 1; } }
+        .active-anim { animation: pulse 1.5s infinite; }
     </style>
 </head>
 <body>
@@ -56,7 +55,7 @@
 <div class="container">
     <div id="loginPage">
         <h2 style="color: var(--dark)">🌿 Smart Garden</h2>
-        <p style="color: #666">Sign in to manage your plants</p>
+        <p style="color: #666">Sign in to control your environment</p>
         <input type="email" id="email" placeholder="Email Address">
         <input type="password" id="pass" placeholder="Password">
         <button class="login-btn" onclick="login()">Access Dashboard</button>
@@ -64,7 +63,7 @@
 
     <div id="dashPage" style="display:none;">
         <div class="header">
-            <h1 id="headerTitle">DASHBOARD</h1>
+            <h1>CONTROL PANEL</h1>
         </div>
 
         <div class="sensor-container">
@@ -79,10 +78,11 @@
                 <b id="txtMode">AUTO</b>
             </button>
             
-            <button id="btnPump" class="btn" onclick="toggle('pump')"><span>WATER PUMP</span><b id="stPump">--</b></button>
-            <button id="btnLight" class="btn" onclick="toggle('light')"><span>GROW LIGHT</span><b id="stLight">--</b></button>
-            <button id="btnFan" class="btn" onclick="toggle('fan')"><span>COOLING FAN</span><b id="stFan">--</b></button>
-            <button id="btnMist" class="btn" onclick="toggle('humiditySaver')"><span>MIST MAKER</span><b id="stMist">--</b></button>
+            <button id="btnPump" class="btn" onclick="toggle('pump')"><span>PUMP (Pin 25)</span><b id="stPump">--</b></button>
+            <button id="btnLight" class="btn" onclick="toggle('light')"><span>LIGHT (Pin 33)</span><b id="stLight">--</b></button>
+            <button id="btnFan" class="btn" onclick="toggle('fan')"><span>COOL FAN (Pin 26)</span><b id="stFan">--</b></button>
+            <button id="btnHeater" class="btn" onclick="toggle('heater')"><span>HEATER (Pin 32)</span><b id="stHeater">--</b></button>
+            <button id="btnExhaust" class="btn" onclick="toggle('exhaust')"><span>EXHAUST (Pin 16)</span><b id="stExhaust">--</b></button>
         </div>
 
         <div style="text-align: center; padding-bottom: 20px;">
@@ -92,7 +92,6 @@
 </div>
 
 <script>
-    // الإعدادات (نفس إعداداتك الأصلية)
     const firebaseConfig = {
         apiKey: "AIzaSyAKrZECVHivxo1vwuSOEzZ7tBkDBulpNnI",
         databaseURL: "https://smart-garden-aad3e-default-rtdb.europe-west1.firebasedatabase.app/",
@@ -114,47 +113,48 @@
     }
 
     function startListening() {
-        // تحديث الحساسات مع ألوان ديناميكية
+        // Sensors Data
         db.ref("Status").on("value", s => {
             const d = s.val();
             if(!d) return;
+            document.getElementById('t').innerText = (d.temperature || 0).toFixed(1) + "°C";
+            document.getElementById('h').innerText = (d.humidity || 0).toFixed(0) + "%";
+            document.getElementById('s').innerText = (d.soilMoisture || 0) + "%";
             
-            document.getElementById('t').innerText = d.temperature + "°C";
-            document.getElementById('h').innerText = d.humidity + "%";
-            document.getElementById('s').innerText = d.soilMoisture + "%";
-
-            // تغيير لون كرت الحرارة إذا زادت عن 30
-            document.getElementById('card-t').style.color = d.temperature > 30 ? "#f44336" : "#2c3e50";
+            // Dynamic color for Temperature
+            document.getElementById('card-t').style.color = d.temperature > 28 ? "#f44336" : "#2c3e50";
         });
 
-        // تحديث أزرار التحكم
+        // Control States
         db.ref("Control").on("value", s => {
             const d = s.val();
             if(!d) return;
 
             autoModeActive = d.autoMode;
             
-            // تحديث زر المود
+            // Mode UI
             const mBtn = document.getElementById('btnAuto');
             document.getElementById('txtMode').innerText = autoModeActive ? "AUTO" : "MANUAL";
             mBtn.className = autoModeActive ? "btn mode-toggle" : "btn mode-toggle mode-manual";
 
-            // تحديث العناصر
+            // Update Elements UI
             updateUI("btnPump", "stPump", d.pump);
             updateUI("btnLight", "stLight", d.light);
             updateUI("btnFan", "stFan", d.fan);
-            updateUI("btnMist", "stMist", d.humiditySaver);
+            updateUI("btnHeater", "stHeater", d.heater);
+            updateUI("btnExhaust", "stExhaust", d.exhaust);
         });
     }
 
     function updateUI(btnId, spanId, state) {
         const btn = document.getElementById(btnId);
         const span = document.getElementById(spanId);
-        
+        if(!btn || !span) return;
+
         span.innerText = state ? "ON" : "OFF";
         btn.className = state ? "btn on active-anim" : "btn off";
 
-        // القفل في وضع الأوتوماتيك
+        // Lock if in AUTO mode
         if(autoModeActive) {
             btn.classList.add("locked");
         } else {
@@ -164,11 +164,13 @@
 
     function toggle(key) {
         if(autoModeActive && key !== 'autoMode') {
-            alert("Switch to MANUAL mode to control devices!");
+            alert("Switch to MANUAL mode for manual control.");
             return;
         }
         const ref = db.ref("Control/" + key);
-        ref.once("value").then(snap => ref.set(!snap.val()));
+        ref.once("value").then(snap => {
+            ref.set(!snap.val());
+        });
     }
 
     function logout() { auth.signOut().then(() => location.reload()); }
