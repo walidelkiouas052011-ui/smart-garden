@@ -9,18 +9,32 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
     <style>
         body { font-family: 'Segoe UI', sans-serif; background-color: #f8f9fa; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
-        .container { width: 100%; max-width: 420px; background: white; padding: 35px; border-radius: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.08); text-align: center; }
-        h1 { color: #2196F3; margin-bottom: 25px; }
-        input { width: 100%; padding: 15px; margin: 10px 0; border-radius: 12px; border: 1px solid #e0e0e0; box-sizing: border-box; font-size: 16px; outline: none; }
-        input:focus { border-color: #2196F3; }
-        .btn { width: 100%; padding: 15px; margin-top: 15px; border: none; border-radius: 12px; font-size: 18px; cursor: pointer; font-weight: 600; transition: 0.3s; }
-        .login-btn { background-color: #2196F3; color: white; }
-        .on { background-color: #4caf50; color: white; }
-        .off { background-color: #f44336; color: white; }
-        .sensor-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 20px 0; }
-        .card { background: #f1f8e9; padding: 12px; border-radius: 12px; border: 1px solid #dcedc8; }
-        .card h3 { font-size: 12px; margin: 0; color: #555; }
-        .card p { font-size: 18px; font-weight: bold; margin: 5px 0; color: #2e7d32; }
+        .container { width: 100%; max-width: 450px; background: white; padding: 30px; border-radius: 30px; box-shadow: 0 10px 40px rgba(0,0,0,0.05); text-align: center; }
+        
+        h1 { color: #2196F3; font-size: 28px; display: flex; align-items: center; justify-content: center; gap: 10px; }
+        
+        /* كروت الحساسات الملونة */
+        .sensor-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin: 25px 0; }
+        .card { background: #f9fbf7; padding: 15px; border-radius: 15px; border: 1px solid #e8f5e9; }
+        .card h3 { font-size: 13px; margin: 0; color: #777; text-transform: uppercase; }
+        .card p { font-size: 20px; font-weight: bold; margin: 8px 0; color: #2e7d32; }
+
+        /* الأزرار العصرية */
+        .btn { width: 100%; padding: 18px; margin: 8px 0; border: none; border-radius: 15px; font-size: 18px; font-weight: bold; cursor: pointer; transition: all 0.3s ease; text-transform: uppercase; }
+        
+        /* وضع التشغيل */
+        .mode-btn { background-color: #4caf50; color: white; margin-bottom: 15px; }
+        .mode-manual { background-color: #ff9800; }
+
+        /* حالة العناصر */
+        .on { background-color: #66bb6a !important; color: white; }
+        .off { background-color: #ef5350 !important; color: white; opacity: 0.8; }
+        
+        /* تجميل الأزرار المعطلة في الوضع التلقائي */
+        .locked { cursor: default; filter: brightness(0.95); }
+
+        input { width: 100%; padding: 15px; margin: 10px 0; border-radius: 12px; border: 1px solid #ddd; outline: none; font-size: 16px; }
+        .login-btn { background: #2196F3; color: white; margin-top: 15px; }
     </style>
 </head>
 <body>
@@ -28,27 +42,31 @@
 <div class="container">
     <div id="loginPage">
         <h1>Login</h1>
-        <input type="email" id="email" placeholder="Enter Email" autocomplete="off">
-        <input type="password" id="pass" placeholder="Enter Password" autocomplete="off">
+        <input type="email" id="email" placeholder="Enter Email">
+        <input type="password" id="pass" placeholder="Enter Password">
         <button class="btn login-btn" onclick="login()">Login</button>
     </div>
 
     <div id="dashPage" style="display:none;">
         <h1>🌿 Dashboard</h1>
+        
         <div class="sensor-grid">
             <div class="card"><h3>Temp</h3><p id="t">--</p></div>
             <div class="card"><h3>Hum</h3><p id="h">--</p></div>
             <div class="card"><h3>Soil</h3><p id="s">--</p></div>
         </div>
+
         <div id="controls">
-            <button id="btnAuto" class="btn" onclick="toggle('autoMode')">Mode</button>
-            <button id="btnPump" class="btn" onclick="toggle('pump')">Pump</button>
-            <button id="btnFan" class="btn" onclick="toggle('fan')">Fan</button>
-            <button id="btnLight" class="btn" onclick="toggle('light')">Light</button>
-            <button id="btnHeater" class="btn" onclick="toggle('heater')">Heater</button>
-            <button id="btnExhaust" class="btn" onclick="toggle('exhaust')">Exhaust</button>
+            <button id="btnAuto" class="btn mode-btn" onclick="toggle('autoMode')">MODE: AUTO</button>
+            
+            <button id="btnPump" class="btn" onclick="toggle('pump')">PUMP</button>
+            <button id="btnFan" class="btn" onclick="toggle('fan')">FAN</button>
+            <button id="btnLight" class="btn" onclick="toggle('light')">LIGHT</button>
+            <button id="btnHeater" class="btn" onclick="toggle('heater')">HEATER</button>
+            <button id="btnExhaust" class="btn" onclick="toggle('exhaust')">EXHAUST</button>
         </div>
-        <button class="btn" style="background:#9e9e9e; color:white; margin-top:20px;" onclick="logout()">Logout</button>
+
+        <button class="btn" style="background:#ddd; color:#666; font-size:14px; margin-top:20px;" onclick="logout()">Logout</button>
     </div>
 </div>
 
@@ -62,19 +80,19 @@
     const auth = firebase.auth();
     const db = firebase.database();
 
-    let isAuto = false;
+    let autoModeActive = false;
 
     function login() {
-        const e = document.getElementById('email').value;
-        const p = document.getElementById('pass').value;
+        const e = document.getElementById('email').value, p = document.getElementById('pass').value;
         auth.signInWithEmailAndPassword(e, p).then(() => {
-            document.getElementById('loginPage').style.display = 'none';
-            document.getElementById('dashPage').style.display = 'block';
-            startApp();
-        }).catch(err => alert("Login Failed: " + err.message));
+            document.getElementById('loginPage').style.display='none';
+            document.getElementById('dashPage').style.display='block';
+            startListening();
+        }).catch(err => alert(err.message));
     }
 
-    function startApp() {
+    function startListening() {
+        // قراءة الحساسات
         db.ref("Status").on("value", s => {
             const d = s.val();
             if(d) {
@@ -84,40 +102,50 @@
             }
         });
 
+        // قراءة حالات التحكم
         db.ref("Control").on("value", s => {
             const d = s.val();
             if(d) {
-                isAuto = d.autoMode;
-                updateUI("btnAuto", d.autoMode, "MODE: AUTO", "MODE: MANUAL");
-                updateUI("btnPump", d.pump, "PUMP", "PUMP");
-                updateUI("btnFan", d.fan, "FAN", "FAN");
-                updateUI("btnLight", d.light, "LIGHT", "LIGHT");
-                updateUI("btnHeater", d.heater, "HEATER", "HEATER");
-                updateUI("btnExhaust", d.exhaust, "EXHAUST", "EXHAUST");
+                autoModeActive = d.autoMode;
+                
+                // تحديث زر المود (AUTO / MANUAL فقط)
+                const mBtn = document.getElementById('btnAuto');
+                mBtn.innerText = autoModeActive ? "MODE: AUTO" : "MODE: MANUAL";
+                mBtn.className = autoModeActive ? "btn mode-btn" : "btn btn mode-btn mode-manual";
+
+                // تحديث حالة العناصر بناءً على ما يرسله الـ ESP32
+                updateElement("btnPump", d.pump, "PUMP");
+                updateElement("btnFan", d.fan, "FAN");
+                updateElement("btnLight", d.light, "LIGHT");
+                updateElement("btnHeater", d.heater, "HEATER");
+                updateElement("btnExhaust", d.exhaust, "EXHAUST");
             }
         });
     }
 
-    function updateUI(id, state, onTxt, offTxt) {
-        const b = document.getElementById(id);
-        if(!b) return;
-        
-        // تغيير النص واللون بناءً على الحالة القادمة من Firebase
-        b.innerText = state ? onTxt + ": ON" : offTxt + ": OFF";
-        b.className = state ? "btn on" : "btn off";
+    function updateElement(id, state, label) {
+        const btn = document.getElementById(id);
+        if(!btn) return;
 
-        // إذا كان الوضع تلقائي، نمنع الضغط على الأزرار الأخرى ونكتفي بعرض الحالة
-        if(id !== "btnAuto") {
-            b.style.opacity = isAuto ? "0.7" : "1";
-            b.style.pointerEvents = isAuto ? "none" : "auto";
+        // تحديث النص واللون
+        btn.innerText = label + ": " + (state ? "ON" : "OFF");
+        btn.className = state ? "btn on" : "btn off";
+
+        // في الوضع التلقائي، نجعل الزر للعرض فقط ولا يستجيب للنقر
+        if(autoModeActive) {
+            btn.classList.add("locked");
+            btn.style.pointerEvents = "none";
+        } else {
+            btn.classList.remove("locked");
+            btn.style.pointerEvents = "auto";
         }
     }
 
-    function toggle(k) {
-        // لا نسمح بالضغط يدوياً إذا كان الوضع تلقائي (إلا لزر المود نفسه)
-        if(isAuto && k !== 'autoMode') return;
-        const r = db.ref("Control/" + k);
-        r.once("value").then(s => r.set(!s.val()));
+    function toggle(key) {
+        // منع التحكم اليدوي إذا كان الوضع AUTO
+        if(autoModeActive && key !== 'autoMode') return;
+        const ref = db.ref("Control/" + key);
+        ref.once("value").then(snap => ref.set(!snap.val()));
     }
 
     function logout() { auth.signOut().then(() => location.reload()); }
