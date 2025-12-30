@@ -3,26 +3,26 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Smart Garden Dashboard</title>
+    <title>Smart Garden Dashboard Pro</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    
     <style>
         :root {
             --primary: #2196F3; --success: #4caf50; --danger: #f44336;
             --warning: #ff9800; --dark: #2c3e50; --light: #f8f9fa;
         }
         body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; margin: 0; padding: 20px; display: flex; justify-content: center; direction: ltr; }
-        .container { width: 100%; max-width: 480px; background: white; border-radius: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); overflow: hidden; position: relative; }
+        .container { width: 100%; max-width: 480px; background: white; border-radius: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); overflow: hidden; position: relative; min-height: 500px; }
         
-        /* زر تبديل اللغة */
         .lang-switch { position: absolute; top: 15px; right: 15px; background: rgba(255,255,255,0.2); color: white; border: 1px solid white; padding: 5px 10px; border-radius: 8px; cursor: pointer; font-size: 12px; z-index: 10; }
 
         .header { background: var(--dark); color: white; padding: 25px 20px; text-align: center; }
         .header h1 { margin: 0; font-size: 20px; letter-spacing: 1px; }
 
         .sensor-container { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; padding: 20px; }
-        .s-card { background: var(--light); padding: 15px 5px; border-radius: 15px; text-align: center; border: 1px solid #eee; }
+        .s-card { background: var(--light); padding: 15px 5px; border-radius: 15px; text-align: center; border: 1px solid #eee; transition: 0.3s; }
         .s-card span { font-size: 11px; color: #888; font-weight: bold; display: block; }
         .s-card p { font-size: 18px; font-weight: bold; margin: 5px 0; color: var(--dark); }
 
@@ -36,17 +36,20 @@
         .mode-toggle { background: var(--primary); color: white; margin-bottom: 20px; }
         .mode-manual { background: var(--warning) !important; }
 
-        .on { background: var(--success); color: white; }
+        .on { background: var(--success); color: white; border: 1px solid var(--success); }
         .off { background: white; color: #999; border: 1px solid #ddd; }
-        .locked { opacity: 0.6; pointer-events: none; filter: grayscale(0.5); }
+        .locked { opacity: 0.5; cursor: not-allowed; filter: grayscale(0.8); }
         
         #loginPage { padding: 40px 20px; text-align: center; }
         input { width: 100%; padding: 14px; margin-bottom: 15px; border-radius: 10px; border: 1px solid #ddd; box-sizing: border-box; }
         .login-btn { background: var(--dark); color: white; width: 100%; padding: 15px; border: none; border-radius: 10px; font-size: 18px; cursor: pointer; }
         
-        /* محاذاة النصوص عند تغيير اللغة للعربية */
         .rtl { direction: rtl; }
         .rtl .btn { flex-direction: row-reverse; }
+        
+        /* تلوين القيم التحذيرية */
+        .status-danger { color: var(--danger) !important; }
+        .status-warning { color: var(--warning) !important; }
     </style>
 </head>
 <body>
@@ -90,6 +93,7 @@
 </div>
 
 <script>
+    // تكوين Firebase الخاص بك
     const firebaseConfig = {
         apiKey: "AIzaSyAKrZECVHivxo1vwuSOEzZ7tBkDBulpNnI",
         databaseURL: "https://smart-garden-aad3e-default-rtdb.europe-west1.firebasedatabase.app/",
@@ -101,7 +105,6 @@
 
     let currentLang = 'ar';
     let autoModeActive = true;
-    let lastStates = {};
 
     const translations = {
         ar: {
@@ -109,21 +112,21 @@
             dashTitle: "لوحة التحكم", lblTemp: "الحرارة", lblHum: "الرطوبة", lblSoil: "التربة",
             lblMode: "وضع التشغيل", auto: "تلقائي", manual: "يدوي",
             lblPump: "المضخة", lblLight: "الإضاءة", lblHumidifier: "المرطب", lblFan: "المروحة", lblHeater: "السخان", lblExhaust: "الشفاط",
-            on: "تشغيل", off: "إيقاف", logout: "تسجيل الخروج", langBtn: "English"
+            on: "تشغيل", off: "إيقاف", logout: "تسجيل الخروج", langBtn: "English", error: "خطأ في البيانات"
         },
         en: {
-            loginTitle: "🌿 Smart Garden", email: "Email Address", pass: "Password", loginBtn: "Login",
+            loginTitle: "🌿 Smart Garden", email: "Email", pass: "Password", loginBtn: "Login",
             dashTitle: "DASHBOARD", lblTemp: "TEMP", lblHum: "HUMIDITY", lblSoil: "SOIL",
             lblMode: "SYSTEM MODE", auto: "AUTO", manual: "MANUAL",
             lblPump: "PUMP", lblLight: "LIGHT", lblHumidifier: "HUMIDIFIER", lblFan: "FAN", lblHeater: "HEATER", lblExhaust: "EXHAUST",
-            on: "ON", off: "OFF", logout: "Logout", langBtn: "العربية"
+            on: "ON", off: "OFF", logout: "Logout", langBtn: "العربية", error: "Login Failed"
         }
     };
 
     function toggleLanguage() {
         currentLang = currentLang === 'ar' ? 'en' : 'ar';
         const root = document.getElementById('mainContainer');
-        if(currentLang === 'ar') root.classList.add('rtl'); else root.classList.remove('rtl');
+        currentLang === 'ar' ? root.classList.add('rtl') : root.classList.remove('rtl');
         
         document.getElementById('langBtn').innerText = translations[currentLang].langBtn;
         document.getElementById('loginTitle').innerText = translations[currentLang].loginTitle;
@@ -143,8 +146,62 @@
         document.getElementById('lblExhaust').innerText = translations[currentLang].lblExhaust;
         document.getElementById('logoutBtn').innerText = translations[currentLang].logout;
         
-        // تحديث النصوص الحالية (ON/OFF)
         updateStatusTexts();
+    }
+
+    function login() {
+        const e = document.getElementById('email').value, p = document.getElementById('pass').value;
+        if(!e || !p) return;
+        
+        auth.signInWithEmailAndPassword(e, p).then(() => {
+            document.getElementById('loginPage').style.display='none';
+            document.getElementById('dashPage').style.display='block';
+            startListening();
+        }).catch(err => alert(translations[currentLang].error));
+    }
+
+    function startListening() {
+        // الاستماع لبيانات الحساسات وتلوينها بناءً على القيم
+        db.ref("Status").on("value", s => {
+            const d = s.val(); if(!d) return;
+            
+            const tEl = document.getElementById('t');
+            const sEl = document.getElementById('s');
+            
+            tEl.innerText = d.temperature + "°C";
+            d.temperature > 35 ? tEl.classList.add('status-danger') : tEl.classList.remove('status-danger');
+            
+            document.getElementById('h').innerText = d.humidity + "%";
+            
+            sEl.innerText = d.soilMoisture + "%";
+            d.soilMoisture < 30 ? sEl.classList.add('status-warning') : sEl.classList.remove('status-warning');
+        });
+
+        // الاستماع لحالة التحكم
+        db.ref("Control").on("value", s => {
+            const d = s.val(); if(!d) return;
+            autoModeActive = d.autoMode;
+            
+            updateUI("btnPump", "stPump", d.pump);
+            updateUI("btnLight", "stLight", d.light);
+            updateUI("btnHumid", "stHum", d.humiditySaver);
+            updateUI("btnFan", "stFan", d.fan);
+            updateUI("btnHeat", "stHeat", d.heater);
+            updateUI("btnExh", "stExh", d.exhaust);
+            
+            // تحديث زر الوضع (تلقائي/يدوي)
+            const btnAuto = document.getElementById('btnAuto');
+            btnAuto.className = d.autoMode ? "btn mode-toggle" : "btn mode-toggle mode-manual";
+            updateStatusTexts();
+        });
+    }
+
+    function updateUI(btnId, spanId, state) {
+        const btn = document.getElementById(btnId);
+        const span = document.getElementById(spanId);
+        span.setAttribute('data-state', state);
+        btn.className = state ? "btn on" : "btn off";
+        if(autoModeActive) btn.classList.add("locked"); else btn.classList.remove("locked");
     }
 
     function updateStatusTexts() {
@@ -158,47 +215,6 @@
         });
     }
 
-    // افتراضياً نبدأ بالعربي
-    document.getElementById('mainContainer').classList.add('rtl');
-
-    function login() {
-        const e = document.getElementById('email').value, p = document.getElementById('pass').value;
-        auth.signInWithEmailAndPassword(e, p).then(() => {
-            document.getElementById('loginPage').style.display='none';
-            document.getElementById('dashPage').style.display='block';
-            startListening();
-        }).catch(err => alert("خطأ في الدخول / Login Error"));
-    }
-
-    function startListening() {
-        db.ref("Status").on("value", s => {
-            const d = s.val(); if(!d) return;
-            document.getElementById('t').innerText = d.temperature + "°C";
-            document.getElementById('h').innerText = d.humidity + "%";
-            document.getElementById('s').innerText = d.soilMoisture + "%";
-        });
-
-        db.ref("Control").on("value", s => {
-            const d = s.val(); if(!d) return;
-            autoModeActive = d.autoMode;
-            updateUI("btnPump", "stPump", d.pump);
-            updateUI("btnLight", "stLight", d.light);
-            updateUI("btnHumid", "stHum", d.humiditySaver);
-            updateUI("btnFan", "stFan", d.fan);
-            updateUI("btnHeat", "stHeat", d.heater);
-            updateUI("btnExh", "stExh", d.exhaust);
-            updateStatusTexts();
-        });
-    }
-
-    function updateUI(btnId, spanId, state) {
-        const btn = document.getElementById(btnId);
-        const span = document.getElementById(spanId);
-        span.setAttribute('data-state', state);
-        btn.className = state ? "btn on" : "btn off";
-        if(autoModeActive) btn.classList.add("locked"); else btn.classList.remove("locked");
-    }
-
     function toggle(key) {
         if(autoModeActive && key !== 'autoMode') return;
         const ref = db.ref("Control/" + key);
@@ -206,6 +222,10 @@
     }
 
     function logout() { auth.signOut().then(() => location.reload()); }
+
+    // البدء باللغة العربية افتراضياً
+    document.getElementById('mainContainer').classList.add('rtl');
 </script>
+
 </body>
 </html>
