@@ -3,127 +3,64 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Smart Garden Dashboard</title>
+    <title>Smart Garden Pro Dashboard</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
     <style>
-        :root {
-            --primary: #2196F3;
-            --success: #4caf50;
-            --danger: #ef5350;
-            --warning: #ff9800;
-            --bg: #f0f2f5;
-        }
-
-        body { 
-            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; 
-            background: linear-gradient(135deg, #e0f2f1 0%, #e3f2fd 100%);
-            display: flex; justify-content: center; align-items: center; 
-            min-height: 100vh; margin: 0; color: #333;
-        }
-
-        .container { 
-            width: 90%; max-width: 450px; background: rgba(255, 255, 255, 0.95); 
-            padding: 25px; border-radius: 25px; 
-            box-shadow: 0 20px 50px rgba(0,0,0,0.1); 
-            backdrop-filter: blur(10px);
-        }
-
-        h1 { color: #2e7d32; font-size: 24px; margin-bottom: 20px; }
-
-        /* تنسيق كروت الحساسات */
-        .sensor-grid { 
-            display: grid; grid-template-columns: repeat(3, 1fr); 
-            gap: 12px; margin-bottom: 25px; 
-        }
-        .card { 
-            background: white; padding: 15px 10px; border-radius: 18px; 
-            border: 1px solid #eee; transition: transform 0.2s;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.02);
-        }
-        .card i { font-size: 20px; margin-bottom: 8px; color: var(--primary); }
-        .card h3 { font-size: 11px; margin: 0; color: #888; text-transform: uppercase; letter-spacing: 1px; }
-        .card p { font-size: 18px; font-weight: 800; margin: 5px 0 0; color: #333; }
-
-        /* أزرار التحكم */
-        .controls-grid {
-            display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
-        }
-
-        .btn { 
-            border: none; border-radius: 12px; font-size: 14px; 
-            font-weight: 600; cursor: pointer; transition: all 0.3s ease; 
-            display: flex; align-items: center; justify-content: center; gap: 8px;
-            padding: 15px;
-        }
-
-        .mode-btn { 
-            grid-column: span 2; background-color: var(--success); 
-            color: white; margin-bottom: 10px; font-size: 16px;
-            box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3);
-        }
-        .mode-manual { background-color: var(--warning); box-shadow: 0 4px 15px rgba(255, 152, 0, 0.3); }
-
-        .on { background-color: #e8f5e9; color: #2e7d32; border: 2px solid #2e7d32; }
-        .off { background-color: #ffebee; color: #c62828; border: 2px solid #ef5350; }
-
-        .locked { opacity: 0.6; filter: grayscale(0.5); }
-
-        /* تسجيل الدخول */
-        input { 
-            width: 100%; padding: 14px; margin: 10px 0; border-radius: 10px; 
-            border: 1px solid #ddd; box-sizing: border-box; font-size: 16px;
-        }
-        .login-btn { background: var(--primary); color: white; width: 100%; margin-top: 10px; }
-
-        .footer-btn { background: none; color: #999; font-size: 13px; margin-top: 20px; border: none; cursor: pointer; text-decoration: underline; }
+        :root { --primary: #2196F3; --success: #4caf50; --danger: #ef5350; --warning: #ff9800; }
+        body { font-family: 'Segoe UI', sans-serif; background: linear-gradient(135deg, #e0f2f1 0%, #e3f2fd 100%); display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
+        .container { width: 90%; max-width: 480px; background: rgba(255, 255, 255, 0.95); padding: 25px; border-radius: 25px; box-shadow: 0 20px 50px rgba(0,0,0,0.1); }
+        h1 { color: #2e7d32; font-size: 22px; text-align: center; margin-bottom: 20px; }
+        .sensor-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 20px; }
+        .card { background: white; padding: 15px 5px; border-radius: 15px; text-align: center; border: 1px solid #eee; }
+        .card i { color: var(--primary); margin-bottom: 5px; }
+        .card p { font-weight: bold; font-size: 18px; margin: 5px 0; }
+        .controls-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .btn { border: none; padding: 12px; border-radius: 12px; font-weight: 600; cursor: pointer; transition: 0.3s; display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 13px; }
+        .mode-btn { grid-column: span 2; background: var(--success); color: white; font-size: 16px; margin-bottom: 10px; }
+        .mode-manual { background: var(--warning); }
+        .on { background: #e8f5e9; color: #2e7d32; border: 2px solid #2e7d32; }
+        .off { background: #ffebee; color: #c62828; border: 2px solid #ef5350; }
+        .locked { opacity: 0.5; pointer-events: none; }
+        input { width: 100%; padding: 12px; margin: 8px 0; border-radius: 10px; border: 1px solid #ddd; box-sizing: border-box; }
+        .login-btn { background: var(--primary); color: white; width: 100%; border: none; padding: 15px; border-radius: 10px; cursor: pointer; }
     </style>
 </head>
 <body>
 
 <div class="container">
     <div id="loginPage">
-        <i class="fas fa-seedling" style="font-size: 50px; color: var(--success); margin-bottom: 10px;"></i>
-        <h1>Garden Login</h1>
-        <input type="email" id="email" placeholder="Email Address">
+        <h1>🌿 Garden Login</h1>
+        <input type="email" id="email" placeholder="Email">
         <input type="password" id="pass" placeholder="Password">
-        <button class="btn login-btn" onclick="login()">Sign In</button>
+        <button class="login-btn" onclick="login()">Sign In</button>
     </div>
 
     <div id="dashPage" style="display:none;">
-        <div style="display: flex; justify-content: space-between; align-items: center;">
-            <h1 style="margin: 0;">🌿 My Garden</h1>
-            <span id="statusDot" style="height: 10px; width: 10px; background: var(--success); border-radius: 50%; display: inline-block;"></span>
-        </div>
-        
+        <h1>🌿 Smart Garden Panel</h1>
         <div class="sensor-grid">
-            <div class="card"><i class="fas fa-thermometer-half"></i><h3>Temp</h3><p id="t">--</p></div>
-            <div class="card"><i class="fas fa-tint"></i><h3>Hum</h3><p id="h">--</p></div>
-            <div class="card"><i class="fas fa-seedling"></i><h3>Soil</h3><p id="s">--</p></div>
+            <div class="card"><i class="fas fa-thermometer-half"></i><p id="t">--</p></div>
+            <div class="card"><i class="fas fa-tint"></i><p id="h">--</p></div>
+            <div class="card"><i class="fas fa-seedling"></i><p id="s">--</p></div>
         </div>
 
-        <button id="btnAuto" class="btn mode-btn" onclick="toggle('autoMode')">
-            <i class="fas fa-robot"></i> <span id="modeText">MODE: AUTO</span>
-        </button>
+        <button id="btnAuto" class="btn mode-btn" onclick="toggle('autoMode')">MODE: AUTO</button>
 
-        <div id="controls" class="controls-grid">
+        <div class="controls-grid">
             <button id="btnPump" class="btn" onclick="toggle('pump')"><i class="fas fa-faucet"></i> PUMP</button>
             <button id="btnFan" class="btn" onclick="toggle('fan')"><i class="fas fa-wind"></i> FAN</button>
             <button id="btnLight" class="btn" onclick="toggle('light')"><i class="fas fa-lightbulb"></i> LIGHT</button>
             <button id="btnHeater" class="btn" onclick="toggle('heater')"><i class="fas fa-fire"></i> HEAT</button>
-            <button id="btnExhaust" class="btn" onclick="toggle('exhaust')" style="grid-column: span 2;">
-                <i class="fas fa-fan"></i> EXHAUST SYSTEM
-            </button>
+            <button id="btnExhaust" class="btn" onclick="toggle('exhaust')"><i class="fas fa-fan"></i> EXHAUST</button>
+            <button id="btnHum" class="btn" onclick="toggle('humidifier')"><i class="fas fa-cloud-rain"></i> HUMIDIFIER</button>
         </div>
-
-        <button class="footer-btn" onclick="logout()">Sign out of session</button>
+        <button onclick="logout()" style="background:none; border:none; color:#999; width:100%; margin-top:15px; cursor:pointer;">Logout</button>
     </div>
 </div>
 
 <script>
-    // Configuration remains the same
     const firebaseConfig = {
         apiKey: "AIzaSyAKrZECVHivxo1vwuSOEzZ7tBkDBulpNnI",
         databaseURL: "https://smart-garden-aad3e-default-rtdb.europe-west1.firebasedatabase.app/",
@@ -132,19 +69,18 @@
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
     const db = firebase.database();
-
-    let autoModeActive = false;
+    let autoActive = false;
 
     function login() {
         const e = document.getElementById('email').value, p = document.getElementById('pass').value;
         auth.signInWithEmailAndPassword(e, p).then(() => {
             document.getElementById('loginPage').style.display='none';
             document.getElementById('dashPage').style.display='block';
-            startListening();
-        }).catch(err => alert("Error: " + err.message));
+            startSync();
+        }).catch(err => alert(err.message));
     }
 
-    function startListening() {
+    function startSync() {
         db.ref("Status").on("value", s => {
             const d = s.val();
             if(d) {
@@ -157,46 +93,30 @@
         db.ref("Control").on("value", s => {
             const d = s.val();
             if(d) {
-                autoModeActive = d.autoMode;
+                autoActive = d.autoMode;
                 const mBtn = document.getElementById('btnAuto');
-                document.getElementById('modeText').innerText = autoModeActive ? "MODE: AUTO" : "MODE: MANUAL";
-                mBtn.className = autoModeActive ? "btn mode-btn" : "btn mode-btn mode-manual";
+                mBtn.innerText = autoActive ? "MODE: AUTO" : "MODE: MANUAL";
+                mBtn.className = autoActive ? "btn mode-btn" : "btn mode-btn mode-manual";
 
-                updateElement("btnPump", d.pump, "PUMP");
-                updateElement("btnFan", d.fan, "FAN");
-                updateElement("btnLight", d.light, "LIGHT");
-                updateElement("btnHeater", d.heater, "HEAT");
-                updateElement("btnExhaust", d.exhaust, "EXHAUST");
+                updateBtn("btnPump", d.pump, "PUMP", "fa-faucet");
+                updateBtn("btnFan", d.fan, "FAN", "fa-wind");
+                updateBtn("btnLight", d.light, "LIGHT", "fa-lightbulb");
+                updateBtn("btnHeater", d.heater, "HEAT", "fa-fire");
+                updateBtn("btnExhaust", d.exhaust, "EXHAUST", "fa-fan");
+                updateBtn("btnHum", d.humidifier, "HUMIDIFIER", "fa-cloud-rain");
             }
         });
     }
 
-    function updateElement(id, state, label) {
-        const btn = document.getElementById(id);
-        if(!btn) return;
-
-        btn.innerHTML = `<i class="fas ${getIcon(id)}"></i> ${label}: ${state ? "ON" : "OFF"}`;
-        btn.className = state ? "btn on" : "btn off";
-
-        if(autoModeActive) {
-            btn.classList.add("locked");
-            btn.style.pointerEvents = "none";
-        } else {
-            btn.classList.remove("locked");
-            btn.style.pointerEvents = "auto";
-        }
-    }
-
-    function getIcon(id) {
-        if(id.includes('Pump')) return 'fa-faucet';
-        if(id.includes('Fan')) return 'fa-wind';
-        if(id.includes('Light')) return 'fa-lightbulb';
-        if(id.includes('Heater')) return 'fa-fire';
-        return 'fa-fan';
+    function updateBtn(id, state, label, icon) {
+        const b = document.getElementById(id);
+        b.innerHTML = `<i class="fas ${icon}"></i> ${label}: ${state ? 'ON' : 'OFF'}`;
+        b.className = state ? "btn on" : "btn off";
+        if(autoActive) b.classList.add("locked"); else b.classList.remove("locked");
     }
 
     function toggle(key) {
-        if(autoModeActive && key !== 'autoMode') return;
+        if(autoActive && key !== 'autoMode') return;
         const ref = db.ref("Control/" + key);
         ref.once("value").then(snap => ref.set(!snap.val()));
     }
