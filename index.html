@@ -13,6 +13,19 @@
         body { font-family: 'Segoe UI', sans-serif; background: linear-gradient(135deg, #e0f2f1 0%, #e3f2fd 100%); display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
         .container { width: 90%; max-width: 480px; background: rgba(255, 255, 255, 0.95); padding: 25px; border-radius: 25px; box-shadow: 0 20px 50px rgba(0,0,0,0.1); }
         h1 { color: #2e7d32; font-size: 22px; text-align: center; margin-bottom: 20px; }
+        
+        /* تحسين صندوق الإدخال ليشمل العين */
+        .pass-container { position: relative; width: 100%; }
+        .toggle-password { 
+            position: absolute; 
+            right: 15px; 
+            top: 50%; 
+            transform: translateY(-50%); 
+            cursor: pointer; 
+            color: #777; 
+            z-index: 10;
+        }
+
         .sensor-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 20px; }
         .card { background: white; padding: 15px 5px; border-radius: 15px; text-align: center; border: 1px solid #eee; }
         .card i { color: var(--primary); margin-bottom: 5px; }
@@ -24,8 +37,8 @@
         .on { background: #e8f5e9; color: #2e7d32; border: 2px solid #2e7d32; }
         .off { background: #ffebee; color: #c62828; border: 2px solid #ef5350; }
         .locked { opacity: 0.5; pointer-events: none; }
-        input { width: 100%; padding: 12px; margin: 8px 0; border-radius: 10px; border: 1px solid #ddd; box-sizing: border-box; }
-        .login-btn { background: var(--primary); color: white; width: 100%; border: none; padding: 15px; border-radius: 10px; cursor: pointer; }
+        input { width: 100%; padding: 12px; margin: 8px 0; border-radius: 10px; border: 1px solid #ddd; box-sizing: border-box; font-size: 14px; }
+        .login-btn { background: var(--primary); color: white; width: 100%; border: none; padding: 15px; border-radius: 10px; cursor: pointer; margin-top: 10px; }
     </style>
 </head>
 <body>
@@ -34,7 +47,12 @@
     <div id="loginPage">
         <h1>🌿 Garden Login</h1>
         <input type="email" id="email" placeholder="Email" value="walidelkiouas052011@gmail.com">
-        <input type="password" id="pass" placeholder="Password" value="w@lid  elki0u@s..2026@" spellcheck="false">
+        
+        <div class="pass-container">
+            <input type="password" id="pass" placeholder="Password" value="w@lid  elki0u@s..2026@" spellcheck="false">
+            <i class="fas fa-eye toggle-password" id="eyeIcon" onclick="togglePassVisibility()"></i>
+        </div>
+        
         <button class="login-btn" id="loginBtn" onclick="login()">Sign In</button>
     </div>
 
@@ -71,7 +89,21 @@
     const db = firebase.database();
     let autoActive = false;
 
-    // فحص حالة الدخول تلقائياً
+    // وظيفة تبديل رؤية كلمة المرور
+    function togglePassVisibility() {
+        const passInput = document.getElementById('pass');
+        const eyeIcon = document.getElementById('eyeIcon');
+        if (passInput.type === "password") {
+            passInput.type = "text";
+            eyeIcon.classList.remove('fa-eye');
+            eyeIcon.classList.add('fa-eye-slash');
+        } else {
+            passInput.type = "password";
+            eyeIcon.classList.remove('fa-eye-slash');
+            eyeIcon.classList.add('fa-eye');
+        }
+    }
+
     auth.onAuthStateChanged(user => {
         if (user) {
             document.getElementById('loginPage').style.display = 'none';
@@ -82,7 +114,7 @@
 
     function login() {
         const e = document.getElementById('email').value.trim();
-        const p = document.getElementById('pass').value; // جلب الباسورد بالمسافات كما هو
+        const p = document.getElementById('pass').value; 
         const btn = document.getElementById('loginBtn');
         
         btn.innerText = "Connecting...";
