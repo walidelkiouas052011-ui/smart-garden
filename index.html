@@ -34,7 +34,7 @@
     <div id="loginPage">
         <h1>🌿 Garden Login</h1>
         <input type="email" id="email" placeholder="Email" value="walidelkiouas052011@gmail.com">
-        <input type="password" id="pass" placeholder="Password" value="w@lid  elki0u@s..2026@">
+        <input type="password" id="pass" placeholder="Password" value="w@lid  elki0u@s..2026@" spellcheck="false">
         <button class="login-btn" id="loginBtn" onclick="login()">Sign In</button>
     </div>
 
@@ -71,7 +71,7 @@
     const db = firebase.database();
     let autoActive = false;
 
-    // مراقبة حالة تسجيل الدخول لفتح اللوحة مباشرة إذا كان المستخدم مسجلاً
+    // فحص حالة الدخول تلقائياً
     auth.onAuthStateChanged(user => {
         if (user) {
             document.getElementById('loginPage').style.display = 'none';
@@ -81,12 +81,14 @@
     });
 
     function login() {
-        const e = document.getElementById('email').value, p = document.getElementById('pass').value;
+        const e = document.getElementById('email').value.trim();
+        const p = document.getElementById('pass').value; // جلب الباسورد بالمسافات كما هو
         const btn = document.getElementById('loginBtn');
+        
         btn.innerText = "Connecting...";
         
         auth.signInWithEmailAndPassword(e, p).catch(err => {
-            alert("Error: " + err.message);
+            alert("Login Failed: " + err.message);
             btn.innerText = "Sign In";
         });
     }
@@ -137,4 +139,3 @@
 </script>
 </body>
 </html>
-
